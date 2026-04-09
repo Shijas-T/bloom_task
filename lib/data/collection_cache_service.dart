@@ -1,4 +1,5 @@
 import 'package:bloom_task/models/collection.dart';
+import 'package:bloom_task/models/section.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -37,5 +38,29 @@ class CollectionCacheService {
 
   Future<void> clearAll() async {
     await _box.clear();
+  }
+
+  static const String _sectionsPrefix = 'sections_';
+
+  Future<void> saveSections(String collectionId, List<Section> sections) async {
+    final key = '$_sectionsPrefix$collectionId';
+    final data = sections.map((e) => e.toJson()).toList();
+    await _box.put(key, data);
+  }
+
+  Future<List<Section>?> getSections(String collectionId) async {
+    final key = '$_sectionsPrefix$collectionId';
+    final data = _box.get(key);
+    if (data == null) return null;
+    try {
+      if (data is List) {
+        return (data)
+            .map((e) => Section.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
+      }
+      return null;
+    } catch (_) {
+      return null; // Graceful cache miss
+    }
   }
 }
